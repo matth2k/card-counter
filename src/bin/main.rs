@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use count::card::Shoe;
+use count::card::{Hand, Shoe};
 use crossterm::{
     event::{Event, KeyCode, read},
     terminal::{disable_raw_mode, enable_raw_mode},
@@ -13,20 +13,28 @@ fn main() -> std::io::Result<()> {
 
     println!("Num decks {no_decks} \n\r\n");
     let mut shoe = Shoe::new(no_decks);
+    let mut hand = Hand::default();
     while !shoe.is_empty() {
         if let Event::Key(key_event) = read()? {
             match key_event.code {
                 KeyCode::Right => {
-                    let count = shoe.running_count();
-                    let card = shoe.deal();
-                    match card {
-                        Some(card) => {
-                            print!("\r                      ");
-                            std::io::stdout().flush()?;
-                            print!("\r\t{}\tCount: {:.1}\t", card, count);
-                            std::io::stdout().flush()?;
+                    if hand.is_bust() {
+                        print!("\r                                 ");
+                        std::io::stdout().flush()?;
+                        hand = Hand::default();
+                    } else {
+                        let count = shoe.running_count();
+                        let card = shoe.deal();
+                        match card {
+                            Some(card) => {
+                                hand.insert(card);
+                                print!("\r                              ");
+                                std::io::stdout().flush()?;
+                                print!("\r\t{}\tCount: {:.1}\t", hand, count);
+                                std::io::stdout().flush()?;
+                            }
+                            None => break,
                         }
-                        None => break,
                     }
                 }
                 KeyCode::Char('c')
