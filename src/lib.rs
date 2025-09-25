@@ -8,3 +8,5 @@ Training for tracking running count of a deck.
 
 */
 pub mod card;
+pub mod hand;
+pub mod shoe;

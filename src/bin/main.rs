@@ -1,6 +1,7 @@
 use std::io::Write;
 
-use count::card::{Hand, Shoe};
+use count::hand::Hand;
+use count::shoe::Shoe;
 use crossterm::{
     event::{Event, KeyCode, read},
     terminal::{disable_raw_mode, enable_raw_mode},
@@ -19,7 +20,9 @@ fn main() -> std::io::Result<()> {
             match key_event.code {
                 KeyCode::Right => {
                     if hand.is_bust() {
-                        print!("\r                                 ");
+                        print!(
+                            "\r                                                                      "
+                        );
                         std::io::stdout().flush()?;
                         hand = Hand::default();
                     } else {
@@ -28,7 +31,9 @@ fn main() -> std::io::Result<()> {
                         match card {
                             Some(card) => {
                                 hand.insert(card);
-                                print!("\r                              ");
+                                print!(
+                                    "\r                                                              "
+                                );
                                 std::io::stdout().flush()?;
                                 print!("\r\t{}\tCount: {:.1}\t", hand, count);
                                 std::io::stdout().flush()?;
