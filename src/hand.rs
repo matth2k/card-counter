@@ -128,6 +128,8 @@ impl Hand {
         }
 
         self.cards.push(card);
+
+        assert!(self.verify());
     }
 
     /// Get the value of the hand
@@ -163,6 +165,34 @@ impl Hand {
     /// Returns true if the hand is a soft hand (contains an ace counted as 11)
     pub fn is_soft(&self) -> bool {
         matches!(self.val, Value::Soft(_, _))
+    }
+
+    /// Returns true if the hand is valid
+    fn verify(&self) -> bool {
+        if self.val == Value::Blackjack && self.cards.len() != 2 {
+            return false;
+        }
+
+        if let Some(v) = self.value()
+            && v > 21
+        {
+            return false;
+        }
+
+        if let Value::Soft(_v, a) = self.val
+            && a >= self.num_aces
+        {
+            return false;
+        }
+
+        if let Value::Soft(v, a) = self.val
+            && v != self.cards.iter().map(|c| c.values()[0] as u8).sum::<u8>()
+                + (10 * (self.num_aces - a))
+        {
+            return false;
+        }
+
+        true
     }
 }
 
