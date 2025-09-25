@@ -83,29 +83,26 @@ impl Hand {
             }
             Value::Soft(v, a) => {
                 let deductions = self.num_aces - a;
-                let other_vals: Vec<u8> = (0..(deductions + 1)).map(|i| v - i * 10).collect();
+                let other_vals: Vec<(u8, u8)> = (0..(deductions + 1))
+                    .map(|i| ((v - i * 10), a + i))
+                    .collect();
                 let mut all_vals = Vec::new();
-                for a in card.values() {
-                    for b in &other_vals {
-                        all_vals.push(a + b);
+
+                for (o, c) in card.values().iter().rev().enumerate() {
+                    for (b, a) in &other_vals {
+                        all_vals.push(((c + b), *a + o as u8));
                     }
                 }
-                all_vals.dedup();
 
                 if self.cards.len() == 1 && v == 11 && card.values()[0] == 10 {
                     Value::Blackjack
-                } else if all_vals.iter().all(|x| *x > 21) {
+                } else if all_vals.iter().all(|(x, _)| *x > 21) {
                     Value::Bust
-                } else if all_vals.iter().filter(|x| **x <= 21).count() == 1 {
-                    Value::Hard(*all_vals.iter().min().unwrap())
+                } else if all_vals.iter().filter(|(x, _)| *x <= 21).count() == 1 {
+                    Value::Hard(all_vals.iter().min().unwrap().0)
                 } else {
-                    let val = *all_vals.iter().filter(|x| **x <= 21).max().unwrap();
-                    let a = if card.is_ace() && val - v == 1 {
-                        a + 1
-                    } else {
-                        a
-                    };
-                    Value::Soft(val, a)
+                    let val = all_vals.iter().filter(|(x, _)| *x <= 21).max().unwrap();
+                    Value::Soft(val.0, val.1)
                 }
             }
 
@@ -117,16 +114,11 @@ impl Hand {
                         all_vals.push(a + b);
                     }
                 }
-                all_vals.dedup();
 
                 if all_vals.iter().all(|x| *x > 21) {
                     Value::Bust
-                } else if all_vals.iter().filter(|x| **x <= 21).count() == 1 {
-                    Value::Hard(*all_vals.iter().min().unwrap())
                 } else {
-                    let val = *all_vals.iter().filter(|x| **x <= 21).max().unwrap();
-                    let a = if card.is_ace() { 2 } else { 1 };
-                    Value::Soft(val, a)
+                    Value::Hard(*all_vals.iter().min().unwrap())
                 }
             }
         };
@@ -151,6 +143,26 @@ impl Hand {
     /// Returns true if the hand is a blackjack
     pub fn is_blackjack(&self) -> bool {
         self.val == Value::Blackjack
+    }
+
+    /// Returns true if the hand is empty
+    pub fn is_empty(&self) -> bool {
+        self.cards.is_empty()
+    }
+
+    /// Returns true if the hand can be doubled (only 2 cards)
+    pub fn can_double(&self) -> bool {
+        self.cards.len() == 2
+    }
+
+    /// Returns true if the hand can be split
+    pub fn can_split(&self) -> bool {
+        self.cards.len() == 2 && self.cards[0].rank() == self.cards[1].rank()
+    }
+
+    /// Returns true if the hand is a soft hand (contains an ace counted as 11)
+    pub fn is_soft(&self) -> bool {
+        matches!(self.val, Value::Soft(_, _))
     }
 }
 
@@ -247,13 +259,10 @@ mod tests {
         let mut hand = Hand::default();
         hand.insert(Card::new(Suit::Spade, Rank::Two));
         hand.insert(Card::new(Suit::Diamond, Rank::Ace));
-        eprintln!("{:?}", hand);
         hand.insert(Card::new(Suit::Spade, Rank::Two));
-        eprintln!("{:?}", hand);
         hand.insert(Card::new(Suit::Diamond, Rank::Ace));
         hand.insert(Card::new(Suit::Diamond, Rank::Ace));
-        eprintln!("{:?}", hand);
-        assert_eq!(hand.value(), Some(20));
+        assert_eq!(hand.value(), Some(17));
         assert!(!hand.is_blackjack());
         assert!(!hand.is_bust());
     }
