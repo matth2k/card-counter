@@ -1,6 +1,5 @@
 use std::io::Write;
 
-use count::hand::Hand;
 use count::table::{Outcome, Table};
 use crossterm::{
     event::{Event, KeyCode, read},
@@ -58,7 +57,6 @@ fn main() -> std::io::Result<()> {
                     }
                 }
                 KeyCode::Down => {
-
                     if last_outcome.is_some() {
                         continue;
                     }

@@ -186,7 +186,7 @@ impl Hand {
         }
 
         if let Value::Soft(v, a) = self.val
-            && v != self.cards.iter().map(|c| c.values()[0] as u8).sum::<u8>()
+            && v != self.cards.iter().map(|c| c.values()[0]).sum::<u8>()
                 + (10 * (self.num_aces - a))
         {
             return false;
