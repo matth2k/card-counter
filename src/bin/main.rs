@@ -1,7 +1,7 @@
 use std::io::Write;
 
 use count::hand::Hand;
-use count::shoe::Shoe;
+use count::table::{Outcome, Table};
 use crossterm::{
     event::{Event, KeyCode, read},
     terminal::{disable_raw_mode, enable_raw_mode},
@@ -13,34 +13,78 @@ fn main() -> std::io::Result<()> {
     let no_decks = 2;
 
     println!("Num decks {no_decks} \n\r\n");
-    let mut shoe = Shoe::new(no_decks);
-    let mut hand = Hand::default();
-    while !shoe.is_empty() {
+    let mut table = Table::new(no_decks, 1);
+    let mut last_outcome = Some(Outcome::Push);
+    table.deal();
+    loop {
         if let Event::Key(key_event) = read()? {
             match key_event.code {
                 KeyCode::Right => {
-                    if hand.is_bust() {
-                        print!(
-                            "\r                                                                      "
-                        );
-                        std::io::stdout().flush()?;
-                        hand = Hand::default();
-                    } else {
-                        let count = shoe.running_count();
-                        let card = shoe.deal();
-                        match card {
-                            Some(card) => {
-                                hand.insert(card);
-                                print!(
-                                    "\r                                                              "
-                                );
+                    match last_outcome {
+                        Some(_) => {
+                            table.clear_hands();
+                            table.deal();
+                            if table.peek() {
+                                print!("\rDealer has blackjack!            ");
                                 std::io::stdout().flush()?;
-                                print!("\r\t{}\tCount: {:.1}\t", hand, count);
-                                std::io::stdout().flush()?;
+                                last_outcome = Some(table.get_outcome(0));
+                                continue;
                             }
-                            None => break,
+
+                            if table.get_outcome(0) == Outcome::Blackjack {
+                                print!("\rBlackjack!            ");
+                                std::io::stdout().flush()?;
+                                last_outcome = Some(table.get_outcome(0));
+                                continue;
+                            }
+
+                            print!("\r{table}");
+                            std::io::stdout().flush()?;
+                            last_outcome = None;
+                        }
+                        _ => {
+                            // A hit
+                            table.player_hit(0);
+
+                            if table.player_bust(0) {
+                                print!("\rBust!            ");
+                                std::io::stdout().flush()?;
+                                last_outcome = Some(table.get_outcome(0));
+                                continue;
+                            }
+                            print!("\r{table}");
+                            std::io::stdout().flush()?;
                         }
                     }
+                }
+                KeyCode::Down => {
+
+                    if last_outcome.is_some() {
+                        continue;
+                    }
+
+                    while table.dealer_value().is_some_and(|v| v < 17) {
+                        table.dealer_hit();
+                        print!("\r{table}");
+                        std::io::stdout().flush()?;
+                        // Sleep for one second
+                        std::thread::sleep(std::time::Duration::from_millis(500));
+                    }
+
+                    let outcome = table.get_outcome(0);
+                    match outcome {
+                        Outcome::Blackjack | Outcome::Win => {
+                            print!("\rYou win!                           ");
+                        }
+                        Outcome::Push => {
+                            print!("\rPush!                              ");
+                        }
+                        Outcome::Lose => {
+                            print!("\rYou lose!                          ");
+                        }
+                    };
+                    std::io::stdout().flush()?;
+                    last_outcome = Some(outcome);
                 }
                 KeyCode::Char('c')
                     if key_event

@@ -75,7 +75,7 @@ impl Shoe {
     }
 
     /// Shuffle the shoe
-    pub fn shuffle(&mut self) {
+    fn shuffle(&mut self) {
         let mut rng = rng();
         self.cards.shuffle(&mut rng);
     }
@@ -93,5 +93,10 @@ impl Shoe {
     /// Return the running count
     pub fn running_count(&self) -> f32 {
         (self.count as f32) / (self.decks as f32)
+    }
+
+    /// Returns how far the deck has been penetrated
+    pub fn get_penetration(&self) -> f32 {
+        1.0 - (self.cards.len() as f32) / ((self.decks * 52) as f32)
     }
 }
