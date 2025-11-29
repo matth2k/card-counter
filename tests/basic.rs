@@ -1,14 +1,3 @@
-# Shoo: A Library for Blackjack training
-
-## Description
-
-A Rust library to assist in creating your own blackjack trainer or game.
-
-## Getting Started
-
-Below is a minimal example to get you started:
-
-```rust
 use shoo::card::{Card, Rank, Suit};
 use shoo::hand::Hand;
 
@@ -20,5 +9,3 @@ fn test_hand() {
     assert!(hand.value().is_some());
     assert!(hand.blackjack());
 }
-
-```

@@ -8,7 +8,7 @@ categories = [
     "data-structures",
 ]
 
-description = "Library for Blackjack games and trainers"
+description = "Library for blackjack games and trainers"
 documentation = "https://matth2k.github.io/shoo/"
 homepage = "https://matth2k.github.io/shoo/"
 include = [
