@@ -2,6 +2,34 @@
 name = "shoo"
 version = "0.1.0"
 edition = "2024"
+license = "MIT OR Apache-2.0"
+
+categories = [
+    "data-structures",
+]
+
+description = "Library for Blackjack games and trainers"
+documentation = "https://matth2k.github.io/shoo/"
+homepage = "https://matth2k.github.io/shoo/"
+include = [
+    "Cargo.toml",
+    "LICENSE-MIT",
+    "LICENSE-APACHE",
+    "README.md",
+    "src/**/*.rs",
+    "tests/**/*.rs",
+    "examples/**/*.rs",
+]
+
+keywords = [
+    "data-structures",
+    "blackjack",
+    "cards",
+]
+
+readme = "README.md"
+repository = "https://github.com/matth2k/shoo"
+
 
 [dependencies]
 rand = { version = "0.9.2" }
