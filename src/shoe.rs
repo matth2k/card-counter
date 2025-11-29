@@ -64,12 +64,12 @@ impl Index<usize> for Shoe {
 }
 
 impl Shoe {
-    /// Get the number of cards in the shoe
+    /// Returns the number of cards in the shoe
     pub fn len(&self) -> usize {
         self.cards.len()
     }
 
-    /// Is the shoe empty
+    /// Returns true if the shoe is empty
     pub fn is_empty(&self) -> bool {
         self.cards.is_empty()
     }
@@ -90,13 +90,18 @@ impl Shoe {
         }
     }
 
+    /// Returns the number of decks loaded into the shoe
+    pub fn num_decks(&self) -> usize {
+        self.decks
+    }
+
     /// Return the running count
     pub fn running_count(&self) -> f32 {
         (self.count as f32) / (self.decks as f32)
     }
 
     /// Returns how far the deck has been penetrated
-    pub fn get_penetration(&self) -> f32 {
+    pub fn penetration(&self) -> f32 {
         1.0 - (self.cards.len() as f32) / ((self.decks * 52) as f32)
     }
 }

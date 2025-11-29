@@ -100,7 +100,7 @@ impl Card {
         Self { suit, rank }
     }
 
-    /// Get the Suit of the card
+    /// Get the suit of the card
     pub fn suit(&self) -> Suit {
         self.suit
     }
@@ -110,7 +110,7 @@ impl Card {
         self.rank
     }
 
-    /// Get the value of the card
+    /// Get the value(s) of the card
     pub fn values(&self) -> &[u8] {
         match self.rank {
             Rank::Ace => &[1, 11],
@@ -126,7 +126,7 @@ impl Card {
         }
     }
 
-    /// Return the count of a card
+    /// Return the hi-lo count of a card
     pub fn count(&self) -> i8 {
         match self.rank {
             Rank::Two | Rank::Three | Rank::Four | Rank::Five | Rank::Six => 1,

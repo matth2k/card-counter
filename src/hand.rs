@@ -10,13 +10,13 @@ use std::fmt::Display;
 /// The value of a hand of cards
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Value {
-    /// A + 10
+    /// Ace and 10
     Blackjack,
-    /// The highest without going over 21, and num of hard aces (counted as 1)
+    /// The highest value without going over 21, followed by number of hard aces (counted as 1)
     Soft(u8, u8),
     /// A hard value
     Hard(u8),
-    /// Bust
+    /// Anything over 21
     Bust,
 }
 
@@ -32,12 +32,14 @@ impl Value {
     }
 }
 
-/// A hand of blackjack
-/// The value of a hand of cards
+/// Represents a hand of cards in blackjack
 #[derive(Debug, Clone)]
 pub struct Hand {
+    /// The cards in the order they were dealt
     cards: Vec<Card>,
+    /// Number of aces in the hand
     num_aces: u8,
+    /// The value of the hand
     val: Value,
 }
 
@@ -55,12 +57,12 @@ impl Hand {
     /// Deal a card to the hand
     pub fn insert(&mut self, card: Card) {
         if self.cards.is_empty() {
-            if card.is_ace() {
-                self.val = Value::Soft(11, 0);
+            self.val = if card.is_ace() {
                 self.num_aces += 1;
+                Value::Soft(11, 0)
             } else {
-                self.val = Value::Hard(card.values()[0]);
-            }
+                Value::Hard(card.values()[0])
+            };
             self.cards.push(card);
             return;
         }
@@ -76,9 +78,9 @@ impl Hand {
                 } else if possible_vals.len() == 1 {
                     Value::Hard(possible_vals[0])
                 } else if possible_vals.iter().any(|x| *x > 21) {
-                    Value::Hard(*possible_vals.iter().min().unwrap())
+                    Value::Hard(possible_vals.into_iter().min().unwrap())
                 } else {
-                    Value::Soft(*possible_vals.iter().max().unwrap(), 0)
+                    Value::Soft(possible_vals.into_iter().max().unwrap(), 0)
                 }
             }
             Value::Soft(v, a) => {
@@ -129,21 +131,21 @@ impl Hand {
 
         self.cards.push(card);
 
-        assert!(self.verify());
+        debug_assert!(self.verify());
     }
 
-    /// Get the value of the hand
+    /// Get the value of the hand. Returns [None] if the hand is bust.
     pub fn value(&self) -> Option<u8> {
         self.val.value()
     }
 
     /// Returns true if the hand is a bust
-    pub fn is_bust(&self) -> bool {
+    pub fn busted(&self) -> bool {
         self.val == Value::Bust
     }
 
     /// Returns true if the hand is a blackjack
-    pub fn is_blackjack(&self) -> bool {
+    pub fn blackjack(&self) -> bool {
         self.val == Value::Blackjack
     }
 
@@ -152,19 +154,19 @@ impl Hand {
         self.cards.is_empty()
     }
 
-    /// Returns true if the hand can be doubled (only 2 cards)
-    pub fn can_double(&self) -> bool {
-        self.cards.len() == 2
+    /// Returns the number of cards in the hand
+    pub fn len(&self) -> usize {
+        self.cards.len()
     }
 
-    /// Returns true if the hand can be split
-    pub fn can_split(&self) -> bool {
+    /// Returns true if the hand is a pair (can split)
+    pub fn pairs(&self) -> bool {
         self.cards.len() == 2 && self.cards[0].rank() == self.cards[1].rank()
     }
 
     /// Returns true if the hand is a soft hand (contains an ace counted as 11)
     pub fn is_soft(&self) -> bool {
-        matches!(self.val, Value::Soft(_, _))
+        matches!(self.val, Value::Soft(_, _) | Value::Blackjack)
     }
 
     /// Returns true if the hand is valid
@@ -228,8 +230,8 @@ mod tests {
         hand.insert(Card::new(Suit::Spade, Rank::Ten));
         hand.insert(Card::new(Suit::Diamond, Rank::Seven));
         assert_eq!(hand.value(), Some(17));
-        assert!(!hand.is_blackjack());
-        assert!(!hand.is_bust());
+        assert!(!hand.blackjack());
+        assert!(!hand.busted());
     }
 
     #[test]
@@ -239,7 +241,7 @@ mod tests {
         hand.insert(Card::new(Suit::Heart, Rank::Nine));
         hand.insert(Card::new(Suit::Diamond, Rank::Five));
         assert_eq!(hand.value(), None);
-        assert!(hand.is_bust());
+        assert!(hand.busted());
     }
 
     #[test]
@@ -249,8 +251,8 @@ mod tests {
         hand.insert(Card::new(Suit::Diamond, Rank::Six));
         hand.insert(Card::new(Suit::Club, Rank::Five));
         assert_eq!(hand.value(), Some(21));
-        assert!(!hand.is_blackjack());
-        assert!(!hand.is_bust());
+        assert!(!hand.blackjack());
+        assert!(!hand.busted());
     }
 
     #[test]
@@ -259,8 +261,8 @@ mod tests {
         hand.insert(Card::new(Suit::Spade, Rank::Ace));
         hand.insert(Card::new(Suit::Diamond, Rank::Six));
         assert_eq!(hand.value(), Some(17));
-        assert!(!hand.is_blackjack());
-        assert!(!hand.is_bust());
+        assert!(!hand.blackjack());
+        assert!(!hand.busted());
     }
 
     #[test]
@@ -270,8 +272,8 @@ mod tests {
         hand.insert(Card::new(Suit::Club, Rank::Eight));
         hand.insert(Card::new(Suit::Diamond, Rank::Ace));
         assert_eq!(hand.value(), Some(20));
-        assert!(!hand.is_blackjack());
-        assert!(!hand.is_bust());
+        assert!(!hand.blackjack());
+        assert!(!hand.busted());
     }
 
     #[test]
@@ -280,8 +282,8 @@ mod tests {
         hand.insert(Card::new(Suit::Spade, Rank::Ace));
         hand.insert(Card::new(Suit::Diamond, Rank::King));
         assert_eq!(hand.value(), Some(21));
-        assert!(hand.is_blackjack());
-        assert!(!hand.is_bust());
+        assert!(hand.blackjack());
+        assert!(!hand.busted());
     }
 
     #[test]
@@ -293,7 +295,7 @@ mod tests {
         hand.insert(Card::new(Suit::Diamond, Rank::Ace));
         hand.insert(Card::new(Suit::Diamond, Rank::Ace));
         assert_eq!(hand.value(), Some(17));
-        assert!(!hand.is_blackjack());
-        assert!(!hand.is_bust());
+        assert!(!hand.blackjack());
+        assert!(!hand.busted());
     }
 }

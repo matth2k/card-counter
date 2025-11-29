@@ -2,9 +2,9 @@
 #![warn(missing_docs, unreachable_pub)]
 /*!
 
-`counter`
+`shoo`
 
-Training for tracking running count of a deck.
+Library for blackjack games and trainers.
 
 */
 pub mod card;

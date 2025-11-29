@@ -1,18 +1,19 @@
 use std::io::Write;
 
-use shoo::table::{Outcome, Table};
 use crossterm::{
     event::{Event, KeyCode, read},
     terminal::{disable_raw_mode, enable_raw_mode},
 };
+use shoo::table::{Outcome, Table};
 
 fn main() -> std::io::Result<()> {
     enable_raw_mode()?;
 
-    let no_decks = 2;
+    let num_decks = 2;
+    let max_penetration = 0.60;
 
-    println!("Num decks {no_decks} \n\r\n");
-    let mut table = Table::new(no_decks, 1);
+    println!("Num decks: {num_decks} Max Pen: {max_penetration} \n\r\n");
+    let mut table = Table::new(num_decks, 1, max_penetration);
     let mut last_outcome = Some(Outcome::Push);
     table.deal();
     loop {
@@ -45,7 +46,7 @@ fn main() -> std::io::Result<()> {
                             // A hit
                             table.player_hit(0);
 
-                            if table.player_bust(0) {
+                            if table.player_hand(0).busted() {
                                 print!("\rBust!            ");
                                 std::io::stdout().flush()?;
                                 last_outcome = Some(table.get_outcome(0));
