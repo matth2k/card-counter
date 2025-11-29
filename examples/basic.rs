@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use count::table::{Outcome, Table};
+use shoo::table::{Outcome, Table};
 use crossterm::{
     event::{Event, KeyCode, read},
     terminal::{disable_raw_mode, enable_raw_mode},
