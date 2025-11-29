@@ -80,11 +80,11 @@ impl Table {
         self.dealt = false;
     }
 
-    /// Deal the initial hands for player and dealers
+    /// Deal the initial hands for player and dealers. Returns true if dealing prompted the shoe to reshuffle.
     ///
     /// # Panics
     /// Panics if there are already cards dealt on the table
-    pub fn deal(&mut self) {
+    pub fn deal(&mut self) -> bool {
         if self.dealt {
             panic!("Cannot deal when hands are currently on the table");
         }
@@ -93,7 +93,8 @@ impl Table {
             debug_assert!(player.is_empty());
         }
 
-        if self.shoe.penetration() > self.max_penetration {
+        let reshuffle = self.shoe.penetration() > self.max_penetration;
+        if reshuffle {
             self.shoe = Shoe::new(self.num_decks);
         }
 
@@ -105,6 +106,8 @@ impl Table {
             }
             self.dealer.insert(self.shoe.deal().unwrap());
         }
+
+        reshuffle
     }
 
     /// Returns true if the dealer has blackjack
