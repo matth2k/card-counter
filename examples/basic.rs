@@ -9,8 +9,8 @@ use shoo::table::{Outcome, Table};
 fn main() -> std::io::Result<()> {
     enable_raw_mode()?;
 
-    let num_decks = 2;
-    let max_penetration = 0.60;
+    let num_decks = 1;
+    let max_penetration = 0.40;
 
     println!("Num decks: {num_decks} Max Pen: {max_penetration} \n\r\n");
     let mut table = Table::new(num_decks, 1, max_penetration);
@@ -23,7 +23,9 @@ fn main() -> std::io::Result<()> {
                     match last_outcome {
                         Some(_) => {
                             table.clear_hands();
-                            table.deal();
+                            if table.deal() {
+                                println!("\rShoe reshuffled!            ");
+                            }
                             if table.peek() {
                                 print!("\rDealer has blackjack!            ");
                                 std::io::stdout().flush()?;
