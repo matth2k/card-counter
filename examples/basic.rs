@@ -50,6 +50,7 @@ fn main() -> std::io::Result<()> {
 
                             if table.player_hand(0).busted() {
                                 print!("\rBust!            ");
+                                print!("\r{table}");
                                 std::io::stdout().flush()?;
                                 last_outcome = Some(table.get_outcome(0));
                                 continue;

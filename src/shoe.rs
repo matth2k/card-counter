@@ -8,12 +8,61 @@ use crate::card::{Card, Rank, Suit};
 use rand::{rng, seq::SliceRandom};
 use std::ops::Index;
 
+/// A trait for card counting strategies
+pub trait Counter {
+    /// Create a new counter on `num_decks` decks
+    fn new(num_decks: usize) -> Self;
+
+    /// Clears the counter
+    fn clear(&mut self);
+
+    /// Get the current count
+    fn count(&self) -> f32;
+
+    /// Update the count with a dealt card
+    fn insert(&mut self, card: Card);
+
+    /// Update the count with multiple dealt cards
+    fn update(&mut self, cards: impl Iterator<Item = Card>) {
+        for card in cards {
+            self.insert(card);
+        }
+    }
+}
+
+/// The high-low card counting strategy
+pub struct HiLoCounter {
+    running_count: i32,
+    num_decks: usize,
+}
+
+impl Counter for HiLoCounter {
+    fn new(num_decks: usize) -> Self {
+        Self {
+            running_count: 0,
+            num_decks,
+        }
+    }
+
+    fn clear(&mut self) {
+        self.running_count = 0;
+    }
+
+    fn count(&self) -> f32 {
+        (self.running_count as f32) / (self.num_decks as f32)
+    }
+
+    fn insert(&mut self, card: Card) {
+        self.running_count += card.count() as i32;
+    }
+}
+
 /// A shoe of cards
 pub struct Shoe {
     /// the cards
     cards: Vec<Card>,
-    /// the running count
-    count: i32,
+    /// The running count
+    counter: HiLoCounter,
     /// the number of decks
     decks: usize,
 }
@@ -47,7 +96,7 @@ impl Shoe {
 
         let mut shoe = Self {
             cards,
-            count: 0,
+            counter: HiLoCounter::new(decks),
             decks,
         };
         shoe.shuffle();
@@ -83,7 +132,7 @@ impl Shoe {
     /// Deal a card from the shoe
     pub fn deal(&mut self) -> Option<Card> {
         if let Some(card) = self.cards.pop() {
-            self.count += card.count() as i32;
+            self.counter.insert(card);
             Some(card)
         } else {
             None
@@ -97,11 +146,16 @@ impl Shoe {
 
     /// Return the running count
     pub fn running_count(&self) -> f32 {
-        (self.count as f32) / (self.decks as f32)
+        self.counter.count()
     }
 
     /// Returns how far the deck has been penetrated
     pub fn penetration(&self) -> f32 {
         1.0 - (self.cards.len() as f32) / ((self.decks * 52) as f32)
+    }
+
+    /// Forcibly reset the shoe
+    pub fn reset(&mut self) {
+        *self = Self::new(self.decks);
     }
 }

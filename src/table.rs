@@ -203,7 +203,13 @@ impl Table {
 impl Display for Table {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "\n\n")?;
-        writeln!(f, "Dealer: {}", self.dealer)?;
+        writeln!(
+            f,
+            "Dealer: {}    {} {}",
+            self.dealer,
+            self.shoe.running_count(),
+            self.shoe.penetration()
+        )?;
         for (i, player) in self.player_hands().enumerate() {
             writeln!(f, "Player {}: {}", i + 1, player)?;
         }
