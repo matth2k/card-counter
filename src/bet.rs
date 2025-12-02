@@ -70,6 +70,13 @@ impl Ord for Bet {
     }
 }
 
+impl Bet {
+    /// Returns true if the bet is zero/empty
+    pub fn is_empty(&self) -> bool {
+        self.units == 0
+    }
+}
+
 impl IntoIterator for Bet {
     type Item = Chip;
     type IntoIter = std::vec::IntoIter<Self::Item>;

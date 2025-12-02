@@ -4,7 +4,7 @@
 
 */
 
-use crate::{hand::Hand, shoe::Shoe};
+use crate::{bet::Bet, hand::Hand, shoe::Shoe};
 use std::fmt::Display;
 
 /// Represents the outcome of a hand
@@ -20,20 +20,33 @@ pub enum Outcome {
     Push,
 }
 
+/// Represents the state of the table
+#[derive(Debug, Clone, PartialEq, Eq, Copy)]
+enum TableState {
+    /// Open for bets
+    Open,
+    /// Initial cards dealt
+    Dealt,
+    /// The dealer flipped
+    Flipped,
+}
+
 /// A blackjack table
 pub struct Table {
     /// The dealer's hand
     dealer: Hand,
-    /// The players' hands
+    /// The player hands
     player_hands: Vec<Hand>,
+    /// The player bets
+    player_bets: Vec<Bet>,
     /// The shoe
     shoe: Shoe,
     /// The max deck penetration before reshuffle
     max_penetration: f32,
     /// The number of decks to play with
     num_decks: usize,
-    /// Cards are currently dealth
-    dealt: bool,
+    /// State of the table
+    state: TableState,
 }
 
 impl Table {
@@ -41,6 +54,7 @@ impl Table {
     pub fn new(num_decks: usize, num_spots: usize, max_penetration: f32) -> Self {
         let shoe = Shoe::new(num_decks);
         let player_hands = vec![Hand::default(); num_spots];
+        let player_bets = vec![Bet::default(); num_spots];
         let dealer = Hand::default();
 
         let max_penetration = max_penetration.clamp(0.0, 1.0);
@@ -48,10 +62,11 @@ impl Table {
         Self {
             dealer,
             player_hands,
+            player_bets,
             shoe,
             max_penetration,
             num_decks,
-            dealt: false,
+            state: TableState::Open,
         }
     }
 
@@ -60,7 +75,7 @@ impl Table {
     /// # Panics
     /// Panics if there are cards currently dealt
     pub fn reset(&mut self) {
-        if self.dealt {
+        if self.state != TableState::Open {
             panic!("Cannot reset table while cards are dealt");
         }
 
@@ -71,13 +86,19 @@ impl Table {
         }
     }
 
-    /// Clear the current hands no matter the state of the table
+    /// Clears all hands from the table
+    ///
+    /// # Panics
+    /// Panics if there are no cards currently dealt
     pub fn clear_hands(&mut self) {
+        if self.state != TableState::Flipped {
+            panic!("Cannot clear hands before dealer has flipped");
+        }
         self.dealer = Hand::default();
         for player in &mut self.player_hands {
             *player = Hand::default();
         }
-        self.dealt = false;
+        self.state = TableState::Open;
     }
 
     /// Deal the initial hands for player and dealers. Returns true if dealing prompted the shoe to reshuffle.
@@ -85,7 +106,7 @@ impl Table {
     /// # Panics
     /// Panics if there are already cards dealt on the table
     pub fn deal(&mut self) -> bool {
-        if self.dealt {
+        if self.state != TableState::Open {
             panic!("Cannot deal when hands are currently on the table");
         }
 
@@ -98,7 +119,7 @@ impl Table {
             self.shoe = Shoe::new(self.num_decks);
         }
 
-        self.dealt = true;
+        self.state = TableState::Dealt;
 
         for _ in 0..2 {
             for player in &mut self.player_hands {
@@ -111,8 +132,20 @@ impl Table {
     }
 
     /// Returns true if the dealer has blackjack
-    pub fn peek(&self) -> bool {
-        self.dealer.blackjack()
+    ///
+    /// # Panics
+    /// Panics if there are no cards currently dealt
+    pub fn peek(&mut self) -> bool {
+        if self.state != TableState::Dealt {
+            panic!("Cannot peek when no cards are dealt");
+        }
+
+        if self.dealer.blackjack() {
+            self.state = TableState::Flipped;
+            true
+        } else {
+            false
+        }
     }
 
     /// Returns a reference to the hand of player `player`
@@ -122,7 +155,7 @@ impl Table {
 
     /// Get the outcome for a player's hand
     pub fn get_outcome(&self, player: usize) -> Outcome {
-        if self.peek() {
+        if self.dealer.blackjack() {
             return if self.player_hand(player).blackjack() {
                 Outcome::Push
             } else {
@@ -157,7 +190,7 @@ impl Table {
     /// # Panics
     /// Panics if there are no cards currently dealt
     pub fn player_hit(&mut self, player: usize) -> bool {
-        if !self.dealt {
+        if self.state != TableState::Dealt {
             panic!("Cannot hit when no cards are dealt");
         }
 
@@ -172,8 +205,8 @@ impl Table {
 
     /// The dealer hits. Returns true if the dealer busted.
     pub fn dealer_hit(&mut self) -> bool {
-        if !self.dealt {
-            panic!("Cannot hit when no cards are dealt");
+        if self.state == TableState::Open {
+            panic!("Cannot hit dealer when no cards are dealt");
         }
 
         if self.dealer.busted() {
@@ -182,12 +215,13 @@ impl Table {
 
         self.dealer.insert(self.shoe.deal().unwrap());
 
+        self.state = TableState::Flipped;
         self.dealer.busted()
     }
 
     /// The dealer value
     pub fn dealer_value(&self) -> Option<u8> {
-        if !self.dealt {
+        if self.state == TableState::Open {
             return None;
         }
 
@@ -197,6 +231,14 @@ impl Table {
     /// An iterator over the player hands
     pub fn player_hands(&self) -> impl Iterator<Item = &Hand> {
         self.player_hands.iter()
+    }
+
+    /// Flip the dealer's hole card
+    pub fn flip_hole(&mut self) {
+        if self.state == TableState::Open {
+            panic!("Cannot flip hole card when no cards are dealt");
+        }
+        self.state = TableState::Flipped;
     }
 }
 

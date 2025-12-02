@@ -15,14 +15,16 @@ fn main() -> std::io::Result<()> {
     println!("Num decks: {num_decks} Max Pen: {max_penetration} \n\r\n");
     let mut table = Table::new(num_decks, 1, max_penetration);
     let mut last_outcome = Some(Outcome::Push);
-    table.deal();
     loop {
         if let Event::Key(key_event) = read()? {
+            // Only trigger on press (not release)
+            if key_event.kind != crossterm::event::KeyEventKind::Press {
+                continue;
+            }
             match key_event.code {
                 KeyCode::Right => {
                     match last_outcome {
                         Some(_) => {
-                            table.clear_hands();
                             if table.deal() {
                                 println!("\rShoe reshuffled!            ");
                             }
@@ -30,6 +32,8 @@ fn main() -> std::io::Result<()> {
                                 print!("\rDealer has blackjack!            ");
                                 std::io::stdout().flush()?;
                                 last_outcome = Some(table.get_outcome(0));
+                                table.flip_hole();
+                                table.clear_hands();
                                 continue;
                             }
 
@@ -37,6 +41,8 @@ fn main() -> std::io::Result<()> {
                                 print!("\rBlackjack!            ");
                                 std::io::stdout().flush()?;
                                 last_outcome = Some(table.get_outcome(0));
+                                table.flip_hole();
+                                table.clear_hands();
                                 continue;
                             }
 
@@ -53,6 +59,8 @@ fn main() -> std::io::Result<()> {
                                 print!("\r{table}");
                                 std::io::stdout().flush()?;
                                 last_outcome = Some(table.get_outcome(0));
+                                table.flip_hole();
+                                table.clear_hands();
                                 continue;
                             }
                             print!("\r{table}");
@@ -65,6 +73,7 @@ fn main() -> std::io::Result<()> {
                         continue;
                     }
 
+                    table.flip_hole();
                     while table.dealer_value().is_some_and(|v| v < 17) {
                         table.dealer_hit();
                         print!("\r{table}");
@@ -87,6 +96,7 @@ fn main() -> std::io::Result<()> {
                     };
                     std::io::stdout().flush()?;
                     last_outcome = Some(outcome);
+                    table.clear_hands();
                 }
                 KeyCode::Char('c')
                     if key_event
