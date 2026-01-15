@@ -1,4 +1,4 @@
-use shoo::bet::{Bet, Chip};
+use shoo::{Bet, Chip};
 
 #[test]
 fn test_bet() {

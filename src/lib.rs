@@ -7,8 +7,13 @@
 Library for blackjack games and trainers.
 
 */
-pub mod bet;
-pub mod card;
-pub mod hand;
-pub mod shoe;
+mod bet;
+mod card;
+mod hand;
+mod shoe;
 pub mod table;
+
+pub use bet::*;
+pub use card::*;
+pub use hand::*;
+pub use shoe::*;

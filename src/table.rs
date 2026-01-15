@@ -38,7 +38,7 @@ pub struct Table {
     /// The player hands
     player_hands: Vec<Hand>,
     /// The player bets
-    player_bets: Vec<Bet>,
+    _player_bets: Vec<Bet>,
     /// The shoe
     shoe: Shoe,
     /// The max deck penetration before reshuffle
@@ -54,7 +54,7 @@ impl Table {
     pub fn new(num_decks: usize, num_spots: usize, max_penetration: f32) -> Self {
         let shoe = Shoe::new(num_decks);
         let player_hands = vec![Hand::default(); num_spots];
-        let player_bets = vec![Bet::default(); num_spots];
+        let _player_bets = vec![Bet::default(); num_spots];
         let dealer = Hand::default();
 
         let max_penetration = max_penetration.clamp(0.0, 1.0);
@@ -62,7 +62,7 @@ impl Table {
         Self {
             dealer,
             player_hands,
-            player_bets,
+            _player_bets,
             shoe,
             max_penetration,
             num_decks,

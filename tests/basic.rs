@@ -1,5 +1,4 @@
-use shoo::card::{Card, Rank, Suit};
-use shoo::hand::Hand;
+use shoo::{Card, Hand, Rank, Suit};
 
 #[test]
 fn test_hand() {
