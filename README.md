@@ -1,3 +1,7 @@
+![](https://github.com/matth2k/shoo/actions/workflows/rust.yml/badge.svg)
+[![Docs](https://img.shields.io/badge/docs-github--pages-blue)](https://matth2k.github.io/shoo/)
+[![crates.io](https://img.shields.io/badge/crates.io-github--pages-blue)](https://crates.io/crates/shoo)
+
 # Shoo: A Library for Blackjack training
 
 ## Description
