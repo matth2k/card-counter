@@ -9,8 +9,7 @@ A Rust library to assist in creating your own blackjack trainer or game.
 Below is a minimal example to get you started:
 
 ```rust
-use shoo::card::{Card, Rank, Suit};
-use shoo::hand::Hand;
+use shoo::{Card, Hand, Rank, Suit};
 
 #[test]
 fn test_hand() {
